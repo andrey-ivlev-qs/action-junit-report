@@ -114,14 +114,13 @@ function attachSummary(testResults, detailedSummary, includePassed) {
             [
                 { data: '', header: true },
                 { data: 'Tests', header: true },
-                { data: 'Passed ✅', header: true },
-                { data: 'Skipped ↪️', header: true },
-                { data: 'Failed ❌', header: true }
+                { data: 'Passed', header: true },
+                { data: 'Skipped️', header: true },
+                { data: 'Failed', header: true }
             ]
         ];
         const detailsTable = [
             [
-                { data: '', header: true },
                 { data: 'Test', header: true },
                 { data: 'Result', header: true }
             ]
@@ -140,26 +139,33 @@ function attachSummary(testResults, detailedSummary, includePassed) {
                     if (!includePassed) {
                         core.info(`⚠️ No annotations found for ${testResult.checkName}. If you want to include passed results in this table please configure 'include_passed' as 'true'`);
                     }
-                    detailsTable.push([`-`, `No test annotations available`, `-`]);
                 }
                 else {
                     for (const annotation of annotations) {
                         detailsTable.push([
-                            `${testResult.checkName}`,
-                            `${annotation.title}`,
-                            `${annotation.annotation_level === 'notice' ? '✅ pass' : `❌ ${annotation.annotation_level}`}`
+                            `${escapeXML(annotation.title)}`,
+                            `${annotation.annotation_level === 'notice' ? 'pass' : `❌\xA0${annotation.annotation_level}`}`
                         ]);
                     }
                 }
             }
         }
         yield core.summary.addTable(table).write();
-        if (detailedSummary) {
+        if (detailedSummary && detailsTable.length > 1) {
             yield core.summary.addTable(detailsTable).write();
         }
     });
 }
 exports.attachSummary = attachSummary;
+function escapeXML(input) {
+    const replacements = {
+        '>': '&gt;',
+        '<': '&lt;',
+        '"': '&quot;',
+        "'": '&apos;'
+    };
+    return input.replace(/[<>"'&]/g, char => { var _a; return (_a = replacements[char]) !== null && _a !== void 0 ? _a : char; });
+}
 
 
 /***/ }),

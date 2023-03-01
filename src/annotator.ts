@@ -112,15 +112,14 @@ export async function attachSummary(
     [
       {data: '', header: true},
       {data: 'Tests', header: true},
-      {data: 'Passed ✅', header: true},
-      {data: 'Skipped ↪️', header: true},
-      {data: 'Failed ❌', header: true}
+      {data: 'Passed', header: true},
+      {data: 'Skipped️', header: true},
+      {data: 'Failed', header: true}
     ]
   ]
 
   const detailsTable: SummaryTableRow[] = [
     [
-      {data: '', header: true},
       {data: 'Test', header: true},
       {data: 'Result', header: true}
     ]
@@ -146,13 +145,11 @@ export async function attachSummary(
             `⚠️ No annotations found for ${testResult.checkName}. If you want to include passed results in this table please configure 'include_passed' as 'true'`
           )
         }
-        detailsTable.push([`-`, `No test annotations available`, `-`])
       } else {
         for (const annotation of annotations) {
           detailsTable.push([
-            `${testResult.checkName}`,
-            `${annotation.title}`,
-            `${annotation.annotation_level === 'notice' ? '✅ pass' : `❌ ${annotation.annotation_level}`}`
+            `${escapeXML(annotation.title)}`,
+            `${annotation.annotation_level === 'notice' ? 'pass' : `❌\xA0${annotation.annotation_level}`}`
           ])
         }
       }
@@ -160,7 +157,17 @@ export async function attachSummary(
   }
 
   await core.summary.addTable(table).write()
-  if (detailedSummary) {
+  if (detailedSummary && detailsTable.length > 1) {
     await core.summary.addTable(detailsTable).write()
   }
+}
+
+function escapeXML(input: string): string {
+  const replacements: Record<string, undefined | string> = {
+    '>': '&gt;',
+    '<': '&lt;',
+    '"': '&quot;',
+    "'": '&apos;'
+  }
+  return input.replace(/[<>"'&]/g, char => replacements[char] ?? char)
 }
